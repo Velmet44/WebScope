@@ -20,7 +20,10 @@ export function useCrawlerWs(crawlerId: string | null) {
     if (!crawlerId) return;
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.hostname}:3001/ws`;
+    const isDev = import.meta.env.DEV;
+    const wsUrl = isDev
+      ? `${protocol}//${window.location.hostname}:3001/ws`
+      : `${protocol}//${window.location.host}/ws`;
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 

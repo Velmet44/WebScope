@@ -229,7 +229,7 @@ export class CrawlerEngine {
         (p) => p.status === 'success' || p.status === 'error'
       ).length;
 
-      if (pagesCrawled >= this.settings.maxPages) {
+      if (pagesCrawled + this.activeRequests >= this.settings.maxPages) {
         this.addLog('info', `Maximum pages limit reached (${this.settings.maxPages})`);
         this.stop();
         return;
@@ -345,7 +345,17 @@ export class CrawlerEngine {
         robotsStatus: this.robotsData ? 'found' : 'not_found',
         content: this.settings.contentMode === 'full' ? html : undefined,
         contentAvailable: true,
+        status: response.status >= 400 ? 'error' : 'success',
       });
+
+      const isErrorStatus = response.status >= 400;
+      if (isErrorStatus) {
+        this.addLog('warning', `${response.status} ${this.extractPath(finalUrl)}`, finalUrl);
+        this.activeRequests--;
+        this.updateStats();
+        this.processQueue();
+        return;
+      }
 
       this.addLog('success', `Crawled ${this.extractPath(finalUrl)} (${response.status}) — ${meta.title || 'No title'}`, finalUrl);
 
