@@ -6,67 +6,99 @@ import {
   ChevronRight,
   ChevronDown,
   Globe,
+  Expand,
+  Shrink,
+  Link2,
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import type { Page } from '../types';
 
 function TreeNode({
   page,
   pages,
+  links,
   selectedPageId,
   onSelect,
   depth = 0,
+  expandAll,
+  collapseAll,
 }: {
   page: Page;
   pages: Page[];
+  links: { sourcePageId: string; targetUrl: string; targetPageId?: string }[];
   selectedPageId: string | null;
   onSelect: (id: string) => void;
   depth?: number;
+  expandAll: boolean;
+  collapseAll: boolean;
 }) {
   const [expanded, setExpanded] = useState(depth < 2);
+
+  useEffect(() => {
+    if (expandAll) setExpanded(true);
+  }, [expandAll]);
+
+  useEffect(() => {
+    if (collapseAll) setExpanded(false);
+  }, [collapseAll]);
+
   const children = useMemo(
     () => pages.filter((p) => p.parentId === page.id),
     [pages, page.id]
   );
   const hasChildren = children.length > 0;
 
-  const statusColor: Record<string, string> = {
-    discovered: 'bg-[var(--color-crawl-queued)]',
-    queued: 'bg-[var(--color-crawl-queued)]',
-    crawling: 'bg-[var(--color-crawl-active)]',
-    success: 'bg-[var(--color-crawl-success)]',
-    error: 'bg-[var(--color-crawl-error)]',
-    timeout: 'bg-[var(--color-crawl-timeout)]',
-    blocked_robots: 'bg-[var(--color-crawl-blocked)]',
-    skipped: 'bg-[var(--color-crawl-queued)]',
-    external: 'bg-[var(--color-crawl-external)]',
+  const crossLinks = useMemo(() => {
+    return links
+      .filter((l) => l.sourcePageId === page.id && l.targetPageId)
+      .map((l) => {
+        const target = pages.find((p) => p.id === l.targetPageId);
+        return target ? { url: l.targetUrl, title: target.title || extractPath(l.targetUrl) } : null;
+      })
+      .filter(Boolean)
+      .slice(0, 3);
+  }, [links, pages, page.id]);
+
+  const statusConfig: Record<string, { dot: string; bg: string }> = {
+    discovered: { dot: 'bg-[var(--color-crawl-queued)]', bg: '' },
+    queued: { dot: 'bg-[var(--color-crawl-queued)]', bg: '' },
+    crawling: { dot: 'bg-[var(--color-crawl-active)]', bg: 'bg-[var(--color-accent-muted)]' },
+    success: { dot: 'bg-[var(--color-crawl-success)]', bg: '' },
+    error: { dot: 'bg-[var(--color-crawl-error)]', bg: 'bg-[var(--color-error-muted)]' },
+    timeout: { dot: 'bg-[var(--color-crawl-timeout)]', bg: 'bg-[var(--color-warning-muted)]' },
+    blocked_robots: { dot: 'bg-[var(--color-crawl-blocked)]', bg: 'bg-[var(--color-accent-muted)]' },
+    skipped: { dot: 'bg-[var(--color-crawl-queued)]', bg: '' },
+    external: { dot: 'bg-[var(--color-crawl-external)]', bg: '' },
   };
 
-  const statusPulse: Record<string, string> = {
-    crawling: 'animate-pulse-soft',
-  };
+  const cfg = statusConfig[page.status] || statusConfig.discovered;
+  const isSelected = selectedPageId === page.id;
 
   return (
     <div>
       <div
         onClick={() => onSelect(page.id)}
         className={`
-          group flex items-center gap-1.5 px-2 py-1 rounded-md cursor-pointer
-          transition-colors duration-150 text-sm
-          ${selectedPageId === page.id
-            ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent)]'
-            : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text-primary)]'
+          group flex items-center gap-1.5 px-2 py-[5px] rounded-md cursor-pointer
+          transition-all duration-150 text-sm
+          ${isSelected
+            ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent)] ring-1 ring-[var(--color-accent)]/30'
+            : page.status === 'crawling'
+              ? `${cfg.bg} text-[var(--color-text-primary)]`
+              : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text-primary)]'
           }
         `}
-        style={{ paddingLeft: `${depth * 16 + 8}px` }}
+        style={{ paddingLeft: `${depth * 18 + 8}px` }}
       >
         <button
           onClick={(e) => {
             e.stopPropagation();
             if (hasChildren) setExpanded(!expanded);
           }}
-          className={`w-4 h-4 flex items-center justify-center shrink-0 ${
-            hasChildren ? 'text-[var(--color-text-muted)]' : 'text-transparent'
+          className={`w-4 h-4 flex items-center justify-center shrink-0 transition-colors ${
+            hasChildren
+              ? 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
+              : 'text-transparent'
           }`}
         >
           {hasChildren &&
@@ -77,26 +109,42 @@ function TreeNode({
             ))}
         </button>
 
-        <div
-          className={`w-2 h-2 rounded-full shrink-0 ${statusColor[page.status] || 'bg-[var(--color-text-muted)]'} ${statusPulse[page.status] || ''}`}
-        />
+        <div className={`w-2 h-2 rounded-full shrink-0 ${cfg.dot} ${
+          page.status === 'crawling' ? 'animate-pulse-soft' : ''
+        }`} />
 
-        <span className="truncate font-mono text-xs">
+        <span className="truncate font-mono text-xs leading-tight">
           {page.title || extractPath(page.url)}
         </span>
+
+        {crossLinks.length > 0 && (
+          <Link2 className="w-3 h-3 text-[var(--color-text-muted)] opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+        )}
+
+        {page.depth > 0 && (
+          <span className="text-[10px] text-[var(--color-text-muted)] ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+            d{page.depth}
+          </span>
+        )}
       </div>
 
       {expanded &&
         children
-          .sort((a, b) => a.depth - b.depth)
+          .sort((a, b) => {
+            const order = ['crawling', 'queued', 'discovered', 'success', 'error', 'timeout', 'blocked_robots'];
+            return order.indexOf(a.status) - order.indexOf(b.status);
+          })
           .map((child) => (
             <TreeNode
               key={child.id}
               page={child}
               pages={pages}
+              links={links}
               selectedPageId={selectedPageId}
               onSelect={onSelect}
               depth={depth + 1}
+              expandAll={expandAll}
+              collapseAll={collapseAll}
             />
           ))}
     </div>
@@ -135,33 +183,111 @@ function StatusLegend() {
 }
 
 export function MapPanel() {
-  const { pages, selectedPageId, selectPage, phase } = useCrawlStore();
+  const { pages, links, selectedPageId, selectPage, phase } = useCrawlStore();
   const rootPages = useMemo(
     () => pages.filter((p) => !p.parentId),
     [pages]
   );
 
+  const [expandAll, setExpandAll] = useState(0);
+  const [collapseAll, setCollapseAll] = useState(0);
+  const [zoom, setZoom] = useState(1);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleZoomIn = useCallback(() => {
+    setZoom((z) => Math.min(z + 0.1, 2));
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    setZoom((z) => Math.max(z - 0.1, 0.5));
+  }, []);
+
+  const handleFitToView = useCallback(() => {
+    setZoom(1);
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        if (e.deltaY < 0) {
+          setZoom((z) => Math.min(z + 0.05, 2));
+        } else {
+          setZoom((z) => Math.max(z - 0.05, 0.5));
+        }
+      }
+    };
+
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, []);
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-[var(--color-bg-primary)]">
       <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--color-border-subtle)]">
-        <h2 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
-          Website Map
-        </h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
+            Website Map
+          </h2>
+          <span className="text-[10px] text-[var(--color-text-muted)] font-mono">
+            {pages.length} page{pages.length !== 1 ? 's' : ''}
+          </span>
+        </div>
         <div className="flex items-center gap-1">
-          <button className="p-1.5 rounded-md hover:bg-[var(--color-bg-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors">
+          <button
+            onClick={handleZoomIn}
+            className="p-1.5 rounded-md hover:bg-[var(--color-bg-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+            title="Zoom in"
+          >
             <ZoomIn className="w-3.5 h-3.5" />
           </button>
-          <button className="p-1.5 rounded-md hover:bg-[var(--color-bg-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors">
+          <span className="text-[10px] text-[var(--color-text-muted)] font-mono w-10 text-center tabular-nums">
+            {Math.round(zoom * 100)}%
+          </span>
+          <button
+            onClick={handleZoomOut}
+            className="p-1.5 rounded-md hover:bg-[var(--color-bg-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+            title="Zoom out"
+          >
             <ZoomOut className="w-3.5 h-3.5" />
           </button>
           <div className="w-px h-3 bg-[var(--color-border-default)] mx-1" />
-          <button className="p-1.5 rounded-md hover:bg-[var(--color-bg-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors">
+          <button
+            onClick={() => setExpandAll((n) => n + 1)}
+            className="p-1.5 rounded-md hover:bg-[var(--color-bg-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+            title="Expand all"
+          >
+            <Expand className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setCollapseAll((n) => n + 1)}
+            className="p-1.5 rounded-md hover:bg-[var(--color-bg-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+            title="Collapse all"
+          >
+            <Shrink className="w-3.5 h-3.5" />
+          </button>
+          <div className="w-px h-3 bg-[var(--color-border-default)] mx-1" />
+          <button
+            onClick={handleFitToView}
+            className="p-1.5 rounded-md hover:bg-[var(--color-bg-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+            title="Fit to view"
+          >
             <Maximize2 className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2">
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-auto p-2"
+        style={{ cursor: 'grab' }}
+      >
         {pages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center animate-fade-in">
             <div className="w-16 h-16 rounded-2xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-default)] flex items-center justify-center mb-4">
@@ -179,14 +305,20 @@ export function MapPanel() {
             </p>
           </div>
         ) : (
-          <div className="space-y-0.5">
+          <div
+            className="origin-top-left transition-transform duration-200"
+            style={{ transform: `scale(${zoom})` }}
+          >
             {rootPages.map((page) => (
               <TreeNode
                 key={page.id}
                 page={page}
                 pages={pages}
+                links={links}
                 selectedPageId={selectedPageId}
                 onSelect={selectPage}
+                expandAll={expandAll > 0}
+                collapseAll={collapseAll > 0}
               />
             ))}
           </div>
