@@ -32,6 +32,7 @@ interface CrawlState {
   updateComment: (id: string, text: string) => void;
   deleteComment: (id: string) => void;
   addLog: (log: LogEntry) => void;
+  clearLogs: () => void;
   setRobotsStatus: (status: RobotsStatus) => void;
   selectPage: (id: string | null) => void;
   setLogFilter: (filter: string) => void;
@@ -119,6 +120,8 @@ export const useCrawlStore = create<CrawlState>((set) => ({
 
   addLog: (log) =>
     set((state) => ({ logs: [...state.logs, log] })),
+
+  clearLogs: () => set({ logs: [] }),
 
   setRobotsStatus: (status) => set({ robotsStatus: status }),
 

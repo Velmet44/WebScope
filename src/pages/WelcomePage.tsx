@@ -1,8 +1,37 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Globe, Upload, ArrowRight, Search, Network, Shield } from 'lucide-react';
+import { useCrawlStore } from '../stores/crawlStore';
+import { ImportModal } from '../components/ImportModal';
+import { Globe, Upload, ArrowRight, Search, Network, Shield, AlertCircle } from 'lucide-react';
+import type { CrawlProject } from '../types';
 
 export function WelcomePage() {
   const navigate = useNavigate();
+  const { updateSettings, addPage, addLink, addComment, addLog, setPhase } = useCrawlStore();
+  const [showImport, setShowImport] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+
+  const handleImport = (project: CrawlProject) => {
+    try {
+      updateSettings(project.settings);
+      setPhase('completed');
+      for (const page of project.pages) {
+        addPage(page);
+      }
+      for (const link of project.links) {
+        addLink(link);
+      }
+      for (const comment of project.comments) {
+        addComment(comment);
+      }
+      for (const log of project.logs) {
+        addLog(log);
+      }
+      navigate('/workspace');
+    } catch {
+      setImportError('Failed to load the project data.');
+    }
+  };
 
   return (
     <div className="h-screen flex flex-col items-center justify-center relative overflow-hidden">
@@ -41,6 +70,7 @@ export function WelcomePage() {
           </button>
 
           <button
+            onClick={() => setShowImport(true)}
             className="flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl
                        bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-elevated)]
                        border border-[var(--color-border-default)] hover:border-[var(--color-border-strong)]
@@ -51,6 +81,13 @@ export function WelcomePage() {
             Import Project
           </button>
         </div>
+
+        {importError && (
+          <div className="mt-4 flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-error-muted)] animate-slide-up">
+            <AlertCircle className="w-4 h-4 text-[var(--color-error)]" />
+            <span className="text-sm text-[var(--color-error)]">{importError}</span>
+          </div>
+        )}
 
         <div className="mt-16 grid grid-cols-3 gap-8 text-center max-w-lg">
           <div className="flex flex-col items-center gap-2">
@@ -77,6 +114,16 @@ export function WelcomePage() {
       <div className="absolute bottom-6 text-xs text-[var(--color-text-muted)]">
         v1.0
       </div>
+
+      {showImport && (
+        <ImportModal
+          onClose={() => {
+            setShowImport(false);
+            setImportError(null);
+          }}
+          onImport={handleImport}
+        />
+      )}
     </div>
   );
 }

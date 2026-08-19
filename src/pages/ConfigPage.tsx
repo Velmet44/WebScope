@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCrawlStore } from '../stores/crawlStore';
+import type { CrawlSettings } from '../types';
 import {
   ArrowLeft,
   Globe,
@@ -169,13 +170,16 @@ export function ConfigPage() {
 
   const handleStart = () => {
     if (!validateUrl(settings.startUrl)) return;
+    setShowWarning(true);
+  };
 
-    if (settings.maxPages > 500 || settings.maxDepth > 10) {
-      setShowWarning(true);
-      return;
-    }
+  const clamp = (v: number, min: number, max: number) =>
+    Math.min(Math.max(v, min), max);
 
-    navigate('/workspace');
+  const setNum = (key: 'maxPages' | 'maxDepth' | 'maxDuration' | 'requestTimeout' | 'delayBetweenRequests' | 'maxConcurrent', v: string) => {
+    const raw = parseInt(v) || 0;
+    const clamped = clamp(raw, key === 'maxPages' ? 1 : 0, key === 'maxPages' ? 10000 : key === 'maxDepth' ? 30 : key === 'maxConcurrent' ? 50 : 3600);
+    updateSettings({ [key]: clamped } as Partial<CrawlSettings>);
   };
 
   const isLarge = settings.maxPages > 200 || settings.maxDepth > 8;
@@ -238,7 +242,7 @@ export function ConfigPage() {
               <Field label="Maximum pages">
                 <Input
                   value={settings.maxPages}
-                  onChange={(v) => updateSettings({ maxPages: parseInt(v) || 0 })}
+                  onChange={(v) => setNum('maxPages', v)}
                   type="number"
                   suffix="pages"
                 />
@@ -246,7 +250,7 @@ export function ConfigPage() {
               <Field label="Maximum depth">
                 <Input
                   value={settings.maxDepth}
-                  onChange={(v) => updateSettings({ maxDepth: parseInt(v) || 0 })}
+                  onChange={(v) => setNum('maxDepth', v)}
                   type="number"
                   suffix="levels"
                 />
@@ -254,7 +258,7 @@ export function ConfigPage() {
               <Field label="Maximum duration">
                 <Input
                   value={settings.maxDuration}
-                  onChange={(v) => updateSettings({ maxDuration: parseInt(v) || 0 })}
+                  onChange={(v) => setNum('maxDuration', v)}
                   type="number"
                   suffix="seconds"
                 />
@@ -262,7 +266,7 @@ export function ConfigPage() {
               <Field label="Request timeout">
                 <Input
                   value={settings.requestTimeout}
-                  onChange={(v) => updateSettings({ requestTimeout: parseInt(v) || 0 })}
+                  onChange={(v) => setNum('requestTimeout', v)}
                   type="number"
                   suffix="seconds"
                 />
@@ -275,7 +279,10 @@ export function ConfigPage() {
               <Field label="Delay between requests">
                 <Input
                   value={settings.delayBetweenRequests}
-                  onChange={(v) => updateSettings({ delayBetweenRequests: parseFloat(v) || 0 })}
+                  onChange={(v) => {
+                  const raw = parseFloat(v) || 0;
+                  updateSettings({ delayBetweenRequests: Math.min(Math.max(raw, 0), 60) });
+                }}
                   type="number"
                   suffix="seconds"
                 />
@@ -283,7 +290,7 @@ export function ConfigPage() {
               <Field label="Max concurrent requests">
                 <Input
                   value={settings.maxConcurrent}
-                  onChange={(v) => updateSettings({ maxConcurrent: parseInt(v) || 0 })}
+                  onChange={(v) => setNum('maxConcurrent', v)}
                   type="number"
                   suffix="requests"
                 />
@@ -389,6 +396,14 @@ export function ConfigPage() {
                   <span>You understand that robots.txt provides crawler instructions but is not a universal legal permission system.</span>
                 </li>
               </ul>
+              {isLarge && (
+                <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-[var(--color-warning-muted)] border border-[var(--color-warning)]/20">
+                  <AlertTriangle className="w-4 h-4 text-[var(--color-warning)] shrink-0 mt-0.5" />
+                  <p className="text-xs text-[var(--color-warning)]">
+                    This is a large crawl ({settings.maxPages} pages at depth {settings.maxDepth}). It may take a while.
+                  </p>
+                </div>
+              )}
             </div>
             <div className="flex justify-end gap-3">
               <button
