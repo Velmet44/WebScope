@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: webscope
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: PORT
+        value: 10000

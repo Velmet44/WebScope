@@ -58,7 +58,7 @@ WebScope is a local-first visual web crawler that turns any website URL into an 
 ## Architecture
 
 ```
-WebScope Desktop App
+WebScope Web App
         |
         +-- React Frontend (TypeScript, Vite, Tailwind)
         |
@@ -133,8 +133,20 @@ The frontend proxies `/api` and `/ws` requests to the backend, so no CORS issues
 
 ```bash
 npm run build
-npm run preview
+npm start
 ```
+
+The Express server serves both the API and the built frontend from `dist/` on a single port (default `3001`, override with the `PORT` environment variable). The WebSocket connects to the same origin in production.
+
+### Deploying
+
+WebScope is a single Node.js process in production — deploy it to any Node host (Render, Railway, Fly.io, a VPS, etc.):
+
+1. Build the frontend: `npm run build`
+2. Install dependencies (including `tsx`): `npm install`
+3. Start the server: `npm start` with `PORT` set by the host
+
+A `render.yaml` blueprint is included for one-click deployment on Render.
 
 ### Push to GitHub
 

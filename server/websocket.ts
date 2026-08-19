@@ -1,5 +1,4 @@
 import type { WebSocketServer, WebSocket } from 'ws';
-import { CrawlerEngine } from './crawler.js';
 
 const clients = new Map<string, Set<WebSocket>>();
 const crawlerClients = new Map<WebSocket, string>();

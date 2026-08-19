@@ -20,8 +20,8 @@ function TreeNode({
   selectedPageId,
   onSelect,
   depth = 0,
-  expandAll,
-  collapseAll,
+  expandEpoch,
+  collapseEpoch,
 }: {
   page: Page;
   pages: Page[];
@@ -29,18 +29,22 @@ function TreeNode({
   selectedPageId: string | null;
   onSelect: (id: string) => void;
   depth?: number;
-  expandAll: boolean;
-  collapseAll: boolean;
+  expandEpoch: number;
+  collapseEpoch: number;
 }) {
   const [expanded, setExpanded] = useState(depth < 2);
+  const [seenExpandEpoch, setSeenExpandEpoch] = useState(expandEpoch);
+  const [seenCollapseEpoch, setSeenCollapseEpoch] = useState(collapseEpoch);
 
-  useEffect(() => {
-    if (expandAll) setExpanded(true);
-  }, [expandAll]);
+  if (expandEpoch !== seenExpandEpoch) {
+    setSeenExpandEpoch(expandEpoch);
+    setExpanded(true);
+  }
 
-  useEffect(() => {
-    if (collapseAll) setExpanded(false);
-  }, [collapseAll]);
+  if (collapseEpoch !== seenCollapseEpoch) {
+    setSeenCollapseEpoch(collapseEpoch);
+    setExpanded(false);
+  }
 
   const children = useMemo(
     () => pages.filter((p) => p.parentId === page.id),
@@ -143,8 +147,8 @@ function TreeNode({
               selectedPageId={selectedPageId}
               onSelect={onSelect}
               depth={depth + 1}
-              expandAll={expandAll}
-              collapseAll={collapseAll}
+              expandEpoch={expandEpoch}
+              collapseEpoch={collapseEpoch}
             />
           ))}
     </div>
@@ -189,8 +193,8 @@ export function MapPanel() {
     [pages]
   );
 
-  const [expandAll, setExpandAll] = useState(0);
-  const [collapseAll, setCollapseAll] = useState(0);
+  const [expandEpoch, setExpandEpoch] = useState(0);
+  const [collapseEpoch, setCollapseEpoch] = useState(0);
   const [zoom, setZoom] = useState(1);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -259,14 +263,14 @@ export function MapPanel() {
           </button>
           <div className="w-px h-3 bg-[var(--color-border-default)] mx-1" />
           <button
-            onClick={() => setExpandAll((n) => n + 1)}
+            onClick={() => setExpandEpoch((n) => n + 1)}
             className="p-1.5 rounded-md hover:bg-[var(--color-bg-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
             title="Expand all"
           >
             <Expand className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => setCollapseAll((n) => n + 1)}
+            onClick={() => setCollapseEpoch((n) => n + 1)}
             className="p-1.5 rounded-md hover:bg-[var(--color-bg-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
             title="Collapse all"
           >
@@ -317,8 +321,8 @@ export function MapPanel() {
                 links={links}
                 selectedPageId={selectedPageId}
                 onSelect={selectPage}
-                expandAll={expandAll > 0}
-                collapseAll={collapseAll > 0}
+                expandEpoch={expandEpoch}
+                collapseEpoch={collapseEpoch}
               />
             ))}
           </div>

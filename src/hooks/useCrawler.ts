@@ -15,6 +15,7 @@ export function useCrawlerWs(crawlerId: string | null) {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const store = useCrawlStore;
+  const connectRef = useRef<(() => void) | null>(null);
 
   const connect = useCallback(() => {
     if (!crawlerId) return;
@@ -67,7 +68,9 @@ export function useCrawlerWs(crawlerId: string | null) {
 
     ws.onclose = () => {
       if (crawlerId) {
-        reconnectRef.current = setTimeout(connect, 3000);
+        reconnectRef.current = setTimeout(() => {
+          connectRef.current?.();
+        }, 3000);
       }
     };
 
@@ -75,6 +78,10 @@ export function useCrawlerWs(crawlerId: string | null) {
       ws.close();
     };
   }, [crawlerId, store]);
+
+  useEffect(() => {
+    connectRef.current = connect;
+  }, [connect]);
 
   useEffect(() => {
     connect();

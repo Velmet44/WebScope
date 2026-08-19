@@ -9,6 +9,7 @@
     "dev:all": "concurrently \"npm run dev:server\" \"npm run dev\"",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
+    "start": "tsx server/index.ts",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -20,6 +21,7 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.2",
+    "tsx": "^4.23.12",
     "ws": "^8.21.3",
     "zustand": "^5.0.15"
   },
@@ -34,7 +36,6 @@
     "concurrently": "^10.0.5",
     "oxlint": "^1.75.0",
     "tailwindcss": "^4.3.3",
-    "tsx": "^4.23.12",
     "typescript": "~6.0.2",
     "vite": "^8.2.0"
   }
