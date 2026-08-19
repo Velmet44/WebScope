@@ -1,4 +1,5 @@
 import { useCrawlStore } from '../stores/crawlStore';
+import { fetchPageContent } from '../hooks/useCrawler';
 import { format } from 'date-fns';
 import {
   X,
@@ -30,7 +31,7 @@ function DetailRow({ label, value, mono = false }: { label: string; value?: stri
   );
 }
 
-export function PageDetailPanel() {
+export function PageDetailPanel({ crawlerId }: { crawlerId: string | null }) {
   const { selectedPageId, pages, comments, selectPage, addComment, deleteComment } = useCrawlStore();
   const [newComment, setNewComment] = useState('');
   const [copied, setCopied] = useState(false);
@@ -166,13 +167,23 @@ export function PageDetailPanel() {
               </span>
             </div>
             <button
+              onClick={async () => {
+                if (!crawlerId || !selectedPageId) return;
+                const content = await fetchPageContent(crawlerId, selectedPageId);
+                if (content) {
+                  useCrawlStore.getState().updatePage(selectedPageId, {
+                    content,
+                    contentAvailable: true,
+                  });
+                }
+              }}
               className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium
                          bg-[var(--color-bg-hover)] hover:bg-[var(--color-bg-elevated)]
                          text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]
                          border border-[var(--color-border-default)] transition-colors"
             >
               <ArrowDownToLine className="w-3.5 h-3.5" />
-              Fetch Content
+              {page.content ? 'Content Available' : 'Fetch Content'}
             </button>
           </div>
         </div>

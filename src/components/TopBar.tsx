@@ -10,9 +10,15 @@ import {
   RotateCcw,
 } from 'lucide-react';
 
-export function TopBar() {
+interface TopBarProps {
+  onStop: () => void;
+  onPause: () => void;
+  onResume: () => void;
+}
+
+export function TopBar({ onStop, onPause, onResume }: TopBarProps) {
   const navigate = useNavigate();
-  const { phase, setPhase, reset, settings } = useCrawlStore();
+  const { phase, reset, settings } = useCrawlStore();
 
   const handleNewCrawl = () => {
     reset();
@@ -42,7 +48,7 @@ export function TopBar() {
         {phase === 'crawling' && (
           <>
             <button
-              onClick={() => setPhase('paused')}
+              onClick={onPause}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
                          bg-[var(--color-warning-muted)] text-[var(--color-warning)]
                          hover:bg-[var(--color-warning)]/20 transition-colors"
@@ -51,7 +57,7 @@ export function TopBar() {
               Pause
             </button>
             <button
-              onClick={() => setPhase('completed')}
+              onClick={onStop}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
                          bg-[var(--color-error-muted)] text-[var(--color-error)]
                          hover:bg-[var(--color-error)]/20 transition-colors"
@@ -64,7 +70,7 @@ export function TopBar() {
 
         {phase === 'paused' && (
           <button
-            onClick={() => setPhase('crawling')}
+            onClick={onResume}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
                        bg-[var(--color-success-muted)] text-[var(--color-success)]
                        hover:bg-[var(--color-success)]/20 transition-colors"
@@ -74,7 +80,7 @@ export function TopBar() {
           </button>
         )}
 
-        {phase === 'completed' && (
+        {(phase === 'completed' || phase === 'error') && (
           <>
             <button
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium

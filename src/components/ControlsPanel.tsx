@@ -35,8 +35,8 @@ function StatCard({
   );
 }
 
-export function ControlsPanel() {
-  const { phase, stats, settings, robotsStatus, setPhase } = useCrawlStore();
+export function ControlsPanel({ onStart }: { onStart: () => void }) {
+  const { phase, stats, settings, robotsStatus } = useCrawlStore();
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -126,7 +126,7 @@ export function ControlsPanel() {
       {phase === 'idle' && (
         <div className="mt-auto p-4 border-t border-[var(--color-border-subtle)]">
           <button
-            onClick={() => setPhase('crawling')}
+            onClick={onStart}
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium
                        bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)]
                        text-white transition-all duration-200 hover:shadow-[0_0_20px_rgba(99,102,241,0.25)]
