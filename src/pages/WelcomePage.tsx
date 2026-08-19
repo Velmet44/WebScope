@@ -34,13 +34,13 @@ export function WelcomePage() {
   };
 
   return (
-    <div className="h-screen flex flex-col items-center justify-center relative overflow-hidden">
+    <div className="h-screen flex items-center justify-center relative overflow-hidden bg-[var(--color-bg-primary)]">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full bg-[var(--color-accent)] opacity-[0.03] blur-[120px]" />
         <div className="absolute bottom-[-100px] left-1/4 w-[400px] h-[400px] rounded-full bg-[var(--color-accent)] opacity-[0.02] blur-[100px]" />
       </div>
 
-      <div className="relative z-10 flex flex-col items-center max-w-2xl mx-auto px-6 animate-fade-in">
+      <div className="relative z-10 flex flex-col items-center text-center px-6 animate-fade-in max-w-xl">
         <div className="mb-8 relative">
           <div className="w-20 h-20 rounded-2xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-default)] flex items-center justify-center">
             <Globe className="w-10 h-10 text-[var(--color-accent)]" strokeWidth={1.5} />
@@ -51,12 +51,12 @@ export function WelcomePage() {
         <h1 className="text-5xl font-bold tracking-tight mb-3 bg-gradient-to-b from-[var(--color-text-primary)] to-[var(--color-text-secondary)] bg-clip-text text-transparent">
           WebScope
         </h1>
-        <p className="text-lg text-[var(--color-text-secondary)] mb-12 text-center leading-relaxed">
-          Visual web crawler. Discover, map, and inspect<br />
+        <p className="text-lg text-[var(--color-text-secondary)] mb-10 leading-relaxed">
+          Visual web crawler. Discover, map, and inspect
           website structures from your local machine.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
+        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
           <button
             onClick={() => navigate('/configure')}
             className="group flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl
@@ -89,19 +89,21 @@ export function WelcomePage() {
           </div>
         )}
 
-        <div className="mt-16 grid grid-cols-3 gap-8 text-center max-w-lg">
+        <div className="mt-14 flex items-center gap-8 text-center">
           <div className="flex flex-col items-center gap-2">
             <div className="w-10 h-10 rounded-lg bg-[var(--color-success-muted)] flex items-center justify-center">
               <Shield className="w-5 h-5 text-[var(--color-success)]" strokeWidth={1.5} />
             </div>
             <span className="text-xs text-[var(--color-text-tertiary)]">Local-first</span>
           </div>
+          <div className="w-px h-12 bg-[var(--color-border-subtle)]" />
           <div className="flex flex-col items-center gap-2">
             <div className="w-10 h-10 rounded-lg bg-[var(--color-info-muted)] flex items-center justify-center">
               <Network className="w-5 h-5 text-[var(--color-info)]" strokeWidth={1.5} />
             </div>
             <span className="text-xs text-[var(--color-text-tertiary)]">Visual Map</span>
           </div>
+          <div className="w-px h-12 bg-[var(--color-border-subtle)]" />
           <div className="flex flex-col items-center gap-2">
             <div className="w-10 h-10 rounded-lg bg-[var(--color-accent-muted)] flex items-center justify-center">
               <Search className="w-5 h-5 text-[var(--color-accent)]" strokeWidth={1.5} />

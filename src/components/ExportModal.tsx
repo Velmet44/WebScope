@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useCrawlStore } from '../stores/crawlStore';
 import { exportProject, downloadFile } from '../lib/export';
+import { Toggle } from './Toggle';
 import {
   X,
   Download,
@@ -119,25 +120,10 @@ export function ExportModal({ onClose }: ExportModalProps) {
                     </span>
                   )}
                 </div>
-                <button
-                  role="switch"
-                  aria-checked={options[toggle.key]}
-                  onClick={() => setOptions({ ...options, [toggle.key]: !options[toggle.key] })}
-                  className={`
-                    relative w-10 h-[22px] rounded-full transition-colors duration-200
-                    ${options[toggle.key]
-                      ? 'bg-[var(--color-accent)]'
-                      : 'bg-[var(--color-bg-hover)] border border-[var(--color-border-default)]'
-                    }
-                  `}
-                >
-                  <span
-                    className={`
-                      absolute top-[3px] w-4 h-4 rounded-full bg-white transition-transform duration-200
-                      ${options[toggle.key] ? 'translate-x-[21px]' : 'translate-x-[3px]'}
-                    `}
-                  />
-                </button>
+                <Toggle
+                  checked={options[toggle.key]}
+                  onChange={(v) => setOptions({ ...options, [toggle.key]: v })}
+                />
               </label>
             );
           })}

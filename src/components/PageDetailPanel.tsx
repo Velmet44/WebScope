@@ -40,7 +40,7 @@ export function PageDetailPanel({ crawlerId }: { crawlerId: string | null }) {
   const [activeTab, setActiveTab] = useState<ContentTab>('info');
   const [newComment, setNewComment] = useState('');
   const [copied, setCopied] = useState(false);
-  const [contentTab, setContentTab] = useState<'text' | 'html' | 'metadata'>('text');
+  const [contentTab, setContentTab] = useState<'text' | 'html' | 'metadata' | 'preview'>('text');
   const [fetching, setFetching] = useState(false);
 
   const page = pages.find((p) => p.id === selectedPageId);
@@ -239,7 +239,7 @@ export function PageDetailPanel({ crawlerId }: { crawlerId: string | null }) {
           <div className="flex flex-col h-full">
             <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--color-border-subtle)]">
               <div className="flex items-center gap-1">
-                {(['text', 'html', 'metadata'] as const).map((tab) => (
+                {(['text', 'html', 'preview', 'metadata'] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setContentTab(tab)}
@@ -249,7 +249,7 @@ export function PageDetailPanel({ crawlerId }: { crawlerId: string | null }) {
                         : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
                     }`}
                   >
-                    {tab === 'text' ? 'Text' : tab === 'html' ? 'HTML' : 'Meta'}
+                    {tab === 'text' ? 'Text' : tab === 'html' ? 'HTML' : tab === 'preview' ? 'Preview' : 'Meta'}
                   </button>
                 ))}
               </div>
@@ -265,6 +265,13 @@ export function PageDetailPanel({ crawlerId }: { crawlerId: string | null }) {
                   <pre className="text-[11px] text-[var(--color-text-tertiary)] font-mono whitespace-pre-wrap leading-relaxed break-all">
                     {page.content.slice(0, 10000)}
                   </pre>
+                ) : contentTab === 'preview' ? (
+                  <iframe
+                    title={`Preview of ${page.title || page.url}`}
+                    srcDoc={page.content}
+                    sandbox=""
+                    className="w-full h-full min-h-[400px] bg-white rounded-lg border border-[var(--color-border-subtle)]"
+                  />
                 ) : (
                   <div className="space-y-0">
                     <DetailRow label="Title" value={page.title} />

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCrawlStore } from '../stores/crawlStore';
+import { Toggle } from '../components/Toggle';
 import type { CrawlSettings } from '../types';
 import {
   ArrowLeft,
@@ -106,43 +107,6 @@ function Select({
   );
 }
 
-function Toggle({
-  checked,
-  onChange,
-  label,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  label: string;
-}) {
-  return (
-    <label className="flex items-center justify-between cursor-pointer group">
-      <span className="text-sm text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors">
-        {label}
-      </span>
-      <button
-        role="switch"
-        aria-checked={checked}
-        onClick={() => onChange(!checked)}
-        className={`
-          relative w-10 h-[22px] rounded-full transition-colors duration-200
-          ${checked
-            ? 'bg-[var(--color-accent)]'
-            : 'bg-[var(--color-bg-hover)] border border-[var(--color-border-default)]'
-          }
-        `}
-      >
-        <span
-          className={`
-            absolute top-[3px] w-4 h-4 rounded-full bg-white transition-transform duration-200
-            ${checked ? 'translate-x-[21px]' : 'translate-x-[3px]'}
-          `}
-        />
-      </button>
-    </label>
-  );
-}
-
 export function ConfigPage() {
   const navigate = useNavigate();
   const { settings, updateSettings } = useCrawlStore();
@@ -186,10 +150,11 @@ export function ConfigPage() {
 
   return (
     <div className="h-screen flex flex-col bg-[var(--color-bg-primary)]">
-      <header className="flex items-center gap-4 px-6 py-4 border-b border-[var(--color-border-subtle)]">
+      <header className="shrink-0 flex items-center gap-4 px-8 py-4 border-b border-[var(--color-border-subtle)]">
         <button
           onClick={() => navigate('/')}
           className="p-2 rounded-lg hover:bg-[var(--color-bg-hover)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+          aria-label="Back to start"
         >
           <ArrowLeft className="w-4 h-4" />
         </button>
@@ -200,7 +165,7 @@ export function ConfigPage() {
       </header>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto px-6 py-8 space-y-6 animate-slide-up">
+        <div className="max-w-2xl mx-auto px-8 py-10 space-y-6 animate-slide-up">
           <Section title="Target" icon={Globe}>
             <Field label="Starting URL" hint="Enter the URL where the crawl begins">
               <Input
@@ -218,7 +183,7 @@ export function ConfigPage() {
           </Section>
 
           <Section title="Scope" icon={Shield}>
-            <div className="space-y-3">
+            <div className="space-y-4">
               <Toggle
                 checked={settings.sameDomainOnly}
                 onChange={(v) => updateSettings({ sameDomainOnly: v })}
@@ -238,7 +203,7 @@ export function ConfigPage() {
           </Section>
 
           <Section title="Limits" icon={Settings}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <Field label="Maximum pages">
                 <Input
                   value={settings.maxPages}
@@ -275,7 +240,7 @@ export function ConfigPage() {
           </Section>
 
           <Section title="Network" icon={Zap}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <Field label="Delay between requests">
                 <Input
                   value={settings.delayBetweenRequests}
@@ -345,29 +310,29 @@ export function ConfigPage() {
               </div>
             </div>
           )}
-
-          <div className="flex justify-end gap-3 pt-4 pb-12">
-            <button
-              onClick={() => navigate('/')}
-              className="px-5 py-2.5 rounded-lg text-sm font-medium text-[var(--color-text-secondary)]
-                         hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text-primary)]
-                         border border-[var(--color-border-default)] transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleStart}
-              className="group px-6 py-2.5 rounded-lg text-sm font-medium text-white
-                         bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)]
-                         transition-all duration-200 hover:shadow-[0_0_20px_rgba(99,102,241,0.25)]
-                         active:scale-[0.98] flex items-center gap-2"
-            >
-              Start Crawl
-              <Zap className="w-4 h-4 transition-transform group-hover:scale-110" />
-            </button>
-          </div>
         </div>
       </div>
+
+      <footer className="shrink-0 flex items-center justify-end gap-3 px-8 py-4 border-t border-[var(--color-border-subtle)] bg-[var(--color-bg-secondary)]/80 backdrop-blur-sm">
+        <button
+          onClick={() => navigate('/')}
+          className="px-5 py-2.5 rounded-lg text-sm font-medium text-[var(--color-text-secondary)]
+                     hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text-primary)]
+                     border border-[var(--color-border-default)] transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleStart}
+          className="group px-6 py-2.5 rounded-lg text-sm font-medium text-white
+                     bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)]
+                     transition-all duration-200 hover:shadow-[0_0_20px_rgba(99,102,241,0.25)]
+                     active:scale-[0.98] flex items-center gap-2"
+        >
+          Start Crawl
+          <Zap className="w-4 h-4 transition-transform group-hover:scale-110" />
+        </button>
+      </footer>
 
       {showWarning && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in">
