@@ -21,6 +21,8 @@ export class CrawlerEngine {
   private crawledCount = 0;
   private timer: ReturnType<typeof setInterval> | null = null;
   private crawlTimer: ReturnType<typeof setTimeout> | null = null;
+  private linkBuffer: Link[] = [];
+  private linkFlushTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(id: string, settings: CrawlSettings) {
     this.id = id;
@@ -110,7 +112,17 @@ export class CrawlerEngine {
 
   private addLink(link: Link) {
     this.links.push(link);
-    this.emit('link', { link });
+    this.linkBuffer.push(link);
+    if (this.linkBuffer.length >= 50) {
+      this.flushLinks();
+    }
+  }
+
+  private flushLinks() {
+    if (this.linkBuffer.length === 0) return;
+    const batch = this.linkBuffer;
+    this.linkBuffer = [];
+    this.emit('links', { links: batch });
   }
 
   private normalizeUrl(url: string): string {
@@ -176,6 +188,10 @@ export class CrawlerEngine {
       this.updateStats();
     }, 1000);
 
+    this.linkFlushTimer = setInterval(() => {
+      this.flushLinks();
+    }, 120);
+
     if (this.settings.maxDuration > 0) {
       this.crawlTimer = setTimeout(() => {
         this.addLog('warning', `Maximum crawl duration reached (${this.settings.maxDuration}s)`);
@@ -191,6 +207,8 @@ export class CrawlerEngine {
     this.running = false;
     if (this.timer) clearInterval(this.timer);
     if (this.crawlTimer) clearTimeout(this.crawlTimer);
+    if (this.linkFlushTimer) clearInterval(this.linkFlushTimer);
+    this.flushLinks();
     this.addLog('info', 'Crawl stopped');
     this.emit('completed', { stats: this.getStats() });
   }
@@ -359,7 +377,15 @@ export class CrawlerEngine {
 
       this.addLog('success', `Crawled ${this.extractPath(finalUrl)} (${response.status}) — ${meta.title || 'No title'}`, finalUrl);
 
+      if (this.aborted) {
+        this.activeRequests--;
+        this.updateStats();
+        return;
+      }
+
       const extractedLinks = extractLinks(html, finalUrl);
+      let externalCount = 0;
+      const externalSamples: string[] = [];
 
       for (const link of extractedLinks) {
         const isExternal = !this.isSameDomain(link.url);
@@ -386,8 +412,22 @@ export class CrawlerEngine {
             }
           }
         } else if (this.settings.allowExternalLinks) {
-          this.addLog('debug', `External link: ${this.extractPath(link.url)}`, link.url);
+          externalCount++;
+          if (externalSamples.length < 5) {
+            externalSamples.push(this.describeLink(link.url));
+          }
         }
+      }
+
+      if (externalCount > 0) {
+        const suffix = externalCount > externalSamples.length
+          ? ` (+${externalCount - externalSamples.length} more)`
+          : '';
+        this.addLog(
+          'debug',
+          `External links on ${this.extractPath(finalUrl)}: ${externalSamples.join(', ')}${suffix} (${externalCount} total)`,
+          finalUrl
+        );
       }
 
       this.addLog('info', `Found ${extractedLinks.length} links on ${this.extractPath(finalUrl)}`, finalUrl);
@@ -425,6 +465,16 @@ export class CrawlerEngine {
     try {
       const u = new URL(url);
       return u.pathname === '/' ? u.hostname : u.pathname;
+    } catch {
+      return url;
+    }
+  }
+
+  private describeLink(url: string): string {
+    try {
+      const u = new URL(url);
+      const path = u.pathname === '/' ? '' : u.pathname.slice(0, 40) + (u.pathname.length > 40 ? '…' : '');
+      return path ? `${u.hostname}${path}` : u.hostname;
     } catch {
       return url;
     }

@@ -8,6 +8,7 @@ type WsEvent =
   | { type: 'page'; page: Page }
   | { type: 'pageUpdate'; page: Page }
   | { type: 'link'; link: Link }
+  | { type: 'links'; links: Link[] }
   | { type: 'robotsStatus'; status: RobotsStatus['status']; message: string }
   | { type: 'completed'; stats: CrawlStats };
 
@@ -52,6 +53,9 @@ export function useCrawlerWs(crawlerId: string | null) {
             break;
           case 'link':
             state.addLink(data.link);
+            break;
+          case 'links':
+            state.addLinks(data.links);
             break;
           case 'robotsStatus':
             state.setRobotsStatus({ status: data.status, message: data.message });

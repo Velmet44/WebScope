@@ -10,13 +10,21 @@ import {
   Shrink,
   Link2,
 } from 'lucide-react';
-import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect, memo } from 'react';
 import type { Page } from '../types';
 
-function TreeNode({
+interface CrossLink {
+  url: string;
+  title: string;
+}
+
+const EMPTY_CROSS_LINKS: CrossLink[] = [];
+
+const TreeNode = memo(function TreeNode({
   page,
   pages,
-  links,
+  crossLinks,
+  crossLinkMap,
   selectedPageId,
   onSelect,
   depth = 0,
@@ -25,7 +33,8 @@ function TreeNode({
 }: {
   page: Page;
   pages: Page[];
-  links: { sourcePageId: string; targetUrl: string; targetPageId?: string }[];
+  crossLinks: CrossLink[];
+  crossLinkMap: Map<string, CrossLink[]>;
   selectedPageId: string | null;
   onSelect: (id: string) => void;
   depth?: number;
@@ -51,17 +60,6 @@ function TreeNode({
     [pages, page.id]
   );
   const hasChildren = children.length > 0;
-
-  const crossLinks = useMemo(() => {
-    return links
-      .filter((l) => l.sourcePageId === page.id && l.targetPageId)
-      .map((l) => {
-        const target = pages.find((p) => p.id === l.targetPageId);
-        return target ? { url: l.targetUrl, title: target.title || extractPath(l.targetUrl) } : null;
-      })
-      .filter(Boolean)
-      .slice(0, 3);
-  }, [links, pages, page.id]);
 
   const statusConfig: Record<string, { dot: string; bg: string }> = {
     discovered: { dot: 'bg-[var(--color-crawl-queued)]', bg: '' },
@@ -143,7 +141,8 @@ function TreeNode({
               key={child.id}
               page={child}
               pages={pages}
-              links={links}
+              crossLinks={crossLinkMap.get(child.id) || EMPTY_CROSS_LINKS}
+              crossLinkMap={crossLinkMap}
               selectedPageId={selectedPageId}
               onSelect={onSelect}
               depth={depth + 1}
@@ -153,7 +152,7 @@ function TreeNode({
           ))}
     </div>
   );
-}
+});
 
 function extractPath(url: string): string {
   try {
@@ -192,6 +191,24 @@ export function MapPanel() {
     () => pages.filter((p) => !p.parentId),
     [pages]
   );
+
+  const crossLinkMap = useMemo(() => {
+    const pageById = new Map(pages.map((p) => [p.id, p]));
+    const map = new Map<string, CrossLink[]>();
+    for (const link of links) {
+      if (!link.targetPageId) continue;
+      const target = pageById.get(link.targetPageId);
+      if (!target) continue;
+      const entry: CrossLink = { url: link.targetUrl, title: target.title || extractPath(link.targetUrl) };
+      const arr = map.get(link.sourcePageId);
+      if (arr) {
+        if (arr.length < 3) arr.push(entry);
+      } else {
+        map.set(link.sourcePageId, [entry]);
+      }
+    }
+    return map;
+  }, [links, pages]);
 
   const [expandEpoch, setExpandEpoch] = useState(0);
   const [collapseEpoch, setCollapseEpoch] = useState(0);
@@ -318,7 +335,8 @@ export function MapPanel() {
                 key={page.id}
                 page={page}
                 pages={pages}
-                links={links}
+                crossLinks={crossLinkMap.get(page.id) || EMPTY_CROSS_LINKS}
+                crossLinkMap={crossLinkMap}
                 selectedPageId={selectedPageId}
                 onSelect={selectPage}
                 expandEpoch={expandEpoch}

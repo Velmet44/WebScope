@@ -15,6 +15,9 @@ dist-ssr
 # TypeScript build info
 *.tsbuildinfo
 
+# Playwright CLI snapshots
+.playwright-cli
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

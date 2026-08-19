@@ -28,6 +28,7 @@ interface CrawlState {
   addPage: (page: Page) => void;
   updatePage: (id: string, partial: Partial<Page>) => void;
   addLink: (link: Link) => void;
+  addLinks: (links: Link[]) => void;
   addComment: (comment: Comment) => void;
   updateComment: (id: string, text: string) => void;
   deleteComment: (id: string) => void;
@@ -102,6 +103,9 @@ export const useCrawlStore = create<CrawlState>((set) => ({
 
   addLink: (link) =>
     set((state) => ({ links: [...state.links, link] })),
+
+  addLinks: (links) =>
+    set((state) => ({ links: [...state.links, ...links] })),
 
   addComment: (comment) =>
     set((state) => ({ comments: [...state.comments, comment] })),

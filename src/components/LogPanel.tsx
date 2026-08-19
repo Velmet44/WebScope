@@ -10,8 +10,12 @@ import {
   Trash2,
   Pause,
   Play,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { format } from 'date-fns';
+
+const MAX_VISIBLE_LOGS = 500;
 
 const levelConfig = {
   info: {
@@ -46,11 +50,32 @@ export function LogPanel() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
   const [userScrolled, setUserScrolled] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const filteredLogs = useMemo(() => {
     if (logFilter === 'all') return logs;
     return logs.filter((l) => l.level === logFilter);
   }, [logs, logFilter]);
+
+  const visibleLogs = useMemo(() => {
+    if (filteredLogs.length <= MAX_VISIBLE_LOGS) return filteredLogs;
+    return filteredLogs.slice(-MAX_VISIBLE_LOGS);
+  }, [filteredLogs]);
+
+  const hiddenCount = filteredLogs.length - visibleLogs.length;
+
+  const handleCopy = useCallback(async () => {
+    const text = filteredLogs
+      .map((log) => `[${format(new Date(log.timestamp), 'HH:mm:ss')}] ${log.message}`)
+      .join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // clipboard unavailable — fall back to selecting nothing
+    }
+  }, [filteredLogs]);
 
   useEffect(() => {
     if (autoScroll && scrollRef.current) {
@@ -83,6 +108,17 @@ export function LogPanel() {
           Live Logs
         </h2>
         <div className="flex items-center gap-1">
+          <button
+            onClick={handleCopy}
+            className={`p-1 rounded transition-colors ${
+              copied
+                ? 'text-[var(--color-success)] hover:bg-[var(--color-bg-hover)]'
+                : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text-secondary)]'
+            }`}
+            title={copied ? 'Copied!' : 'Copy logs'}
+          >
+            {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+          </button>
           <button
             onClick={resumeScroll}
             className={`p-1 rounded hover:bg-[var(--color-bg-hover)] transition-colors ${
@@ -132,7 +168,13 @@ export function LogPanel() {
             </p>
           </div>
         ) : (
-          filteredLogs.map((log) => {
+          <>
+            {hiddenCount > 0 && (
+              <div className="px-2 py-1.5 mb-1 rounded bg-[var(--color-bg-hover)] text-[10px] text-[var(--color-text-muted)]">
+                Showing last {visibleLogs.length} of {filteredLogs.length} logs ({hiddenCount} hidden)
+              </div>
+            )}
+            {visibleLogs.map((log) => {
             const config = levelConfig[log.level];
             const Icon = config.icon;
             const time = format(new Date(log.timestamp), 'HH:mm:ss');
@@ -151,7 +193,8 @@ export function LogPanel() {
                 </span>
               </div>
             );
-          })
+          })}
+          </>
         )}
       </div>
 

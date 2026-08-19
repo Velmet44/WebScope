@@ -1,8 +1,16 @@
-# WebScope v1.0.0
+# WebScope v1.0.1
 
 **Visual web crawler. Discover, map, and inspect website structures.**
 
 WebScope turns any website URL into an interactive, explorable map — with live progress, per-page inspection, notes, and full export/import.
+
+## What's new in v1.0.1
+
+- **Performance fix for link-heavy sites (e.g. Shopify stores):** crawl events are now batched (flushed every 120ms or 50 links) instead of one WebSocket event per link, so the map renders instantly even when a page contains ~500 links
+- **Aggregated external-link logs:** external links on a page collapse into a single readable line (`www.instagram.com/..., (+15 more) (20 total)`) instead of hundreds of log rows
+- **Copy Logs button:** one-click copy of the live log panel (with timestamps) to the clipboard
+- **Log panel overflow protection:** the visible log list is capped with a "showing last N of M" notice
+- **Cleaner stop behavior:** pages that finish after a stop are recorded without dumping link floods
 
 ## Features
 
@@ -16,7 +24,7 @@ WebScope turns any website URL into an interactive, explorable map — with live
 
 ### Live Experience
 - Real-time WebSocket streaming of crawl events (logs, pages, links, stats)
-- Live log panel with severity filtering and auto-scroll
+- Live log panel with severity filtering, auto-scroll, and one-click copy
 - Live statistics: pages, links, external/broken links, errors, robots-blocked, elapsed time, response times
 - Pause, resume, and stop controls
 
