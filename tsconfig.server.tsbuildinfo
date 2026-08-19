@@ -1,0 +1,1 @@
+{"root":["./server/crawler.ts","./server/index.ts","./server/parser.ts","./server/robots.ts","./server/routes.ts","./server/websocket.ts","./src/types/index.ts"],"version":"6.0.3"}
