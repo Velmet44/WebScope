@@ -10,6 +10,16 @@ import type {
   RobotsStatus,
 } from '../types';
 
+export interface CrawlSnapshot {
+  pages: Page[];
+  links: Link[];
+  logs: LogEntry[];
+  stats: CrawlStats;
+  running: boolean;
+  paused: boolean;
+  robotsStatus: RobotsStatus | null;
+}
+
 interface CrawlState {
   phase: CrawlPhase;
   settings: CrawlSettings;
@@ -35,6 +45,7 @@ interface CrawlState {
   addLog: (log: LogEntry) => void;
   clearLogs: () => void;
   setRobotsStatus: (status: RobotsStatus) => void;
+  hydrate: (snapshot: CrawlSnapshot) => void;
   selectPage: (id: string | null) => void;
   setLogFilter: (filter: string) => void;
   reset: () => void;
@@ -128,6 +139,23 @@ export const useCrawlStore = create<CrawlState>((set) => ({
   clearLogs: () => set({ logs: [] }),
 
   setRobotsStatus: (status) => set({ robotsStatus: status }),
+
+  hydrate: (snapshot) =>
+    set((state) => ({
+      pages: snapshot.pages,
+      links: snapshot.links,
+      logs: snapshot.logs,
+      stats: snapshot.stats,
+      robotsStatus: snapshot.robotsStatus,
+      phase: !snapshot.running
+        ? 'completed'
+        : snapshot.paused
+          ? 'paused'
+          : 'crawling',
+      selectedPageId: state.selectedPageId && snapshot.pages.some((p) => p.id === state.selectedPageId)
+        ? state.selectedPageId
+        : null,
+    })),
 
   selectPage: (id) => set({ selectedPageId: id }),
 

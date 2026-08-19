@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { useCrawlStore } from '../stores/crawlStore';
+import { useCrawlStore, type CrawlSnapshot } from '../stores/crawlStore';
 import type { Page, Link, LogEntry, CrawlStats, RobotsStatus, CrawlSettings } from '../types';
 
 type WsEvent =
@@ -10,6 +10,8 @@ type WsEvent =
   | { type: 'link'; link: Link }
   | { type: 'links'; links: Link[] }
   | { type: 'robotsStatus'; status: RobotsStatus['status']; message: string }
+  | { type: 'state'; state: CrawlSnapshot }
+  | { type: 'crawlerNotFound'; crawlerId: string }
   | { type: 'completed'; stats: CrawlStats };
 
 export function useCrawlerWs(crawlerId: string | null) {
@@ -59,6 +61,18 @@ export function useCrawlerWs(crawlerId: string | null) {
             break;
           case 'robotsStatus':
             state.setRobotsStatus({ status: data.status, message: data.message });
+            break;
+          case 'state':
+            state.hydrate(data.state);
+            break;
+          case 'crawlerNotFound':
+            state.setPhase('error');
+            state.addLog({
+              id: crypto.randomUUID(),
+              timestamp: new Date().toISOString(),
+              level: 'error',
+              message: 'Crawl session no longer exists on the server. Start a new crawl.',
+            });
             break;
           case 'completed':
             state.updateStats(data.stats);

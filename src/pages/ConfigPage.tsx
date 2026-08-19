@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCrawlStore } from '../stores/crawlStore';
 import { Toggle } from '../components/Toggle';
-import type { CrawlSettings } from '../types';
 import {
   ArrowLeft,
   Globe,
@@ -107,6 +106,76 @@ function Select({
   );
 }
 
+function NumberInput({
+  value,
+  onChange,
+  min,
+  max,
+  suffix,
+  float = false,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  min: number;
+  max: number;
+  suffix?: string;
+  float?: boolean;
+}) {
+  const [text, setText] = useState(String(value));
+  const [prevValue, setPrevValue] = useState(value);
+  const [focused, setFocused] = useState(false);
+
+  if (!focused && prevValue !== value) {
+    setPrevValue(value);
+    setText(String(value));
+  }
+
+  const parse = (raw: string): number | null => {
+    const n = float ? parseFloat(raw) : parseInt(raw, 10);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const commit = () => {
+    const n = parse(text);
+    if (n === null) {
+      setText(String(value));
+      return;
+    }
+    const clamped = Math.min(Math.max(n, min), max);
+    setText(String(clamped));
+    onChange(clamped);
+  };
+
+  return (
+    <div className="relative">
+      <input
+        type="number"
+        inputMode="decimal"
+        value={text}
+        onFocus={() => setFocused(true)}
+        onBlur={() => {
+          setFocused(false);
+          commit();
+        }}
+        onChange={(e) => {
+          setText(e.target.value);
+          const n = parse(e.target.value);
+          if (n !== null) onChange(Math.min(Math.max(n, min), max));
+        }}
+        className="w-full px-3.5 py-2.5 rounded-lg bg-[var(--color-bg-tertiary)] border border-[var(--color-border-default)]
+                   text-[var(--color-text-primary)] text-sm placeholder:text-[var(--color-text-muted)]
+                   focus:outline-none focus:border-[var(--color-border-focus)] focus:ring-1 focus:ring-[var(--color-border-focus)]
+                   transition-colors"
+      />
+      {suffix && (
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--color-text-muted)]">
+          {suffix}
+        </span>
+      )}
+    </div>
+  );
+}
+
 export function ConfigPage() {
   const navigate = useNavigate();
   const { settings, updateSettings } = useCrawlStore();
@@ -135,15 +204,6 @@ export function ConfigPage() {
   const handleStart = () => {
     if (!validateUrl(settings.startUrl)) return;
     setShowWarning(true);
-  };
-
-  const clamp = (v: number, min: number, max: number) =>
-    Math.min(Math.max(v, min), max);
-
-  const setNum = (key: 'maxPages' | 'maxDepth' | 'maxDuration' | 'requestTimeout' | 'delayBetweenRequests' | 'maxConcurrent', v: string) => {
-    const raw = parseInt(v) || 0;
-    const clamped = clamp(raw, key === 'maxPages' ? 1 : 0, key === 'maxPages' ? 10000 : key === 'maxDepth' ? 30 : key === 'maxConcurrent' ? 50 : 3600);
-    updateSettings({ [key]: clamped } as Partial<CrawlSettings>);
   };
 
   const isLarge = settings.maxPages > 200 || settings.maxDepth > 8;
@@ -205,34 +265,38 @@ export function ConfigPage() {
           <Section title="Limits" icon={Settings}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <Field label="Maximum pages">
-                <Input
+                <NumberInput
                   value={settings.maxPages}
-                  onChange={(v) => setNum('maxPages', v)}
-                  type="number"
+                  onChange={(v) => updateSettings({ maxPages: v })}
+                  min={1}
+                  max={10000}
                   suffix="pages"
                 />
               </Field>
               <Field label="Maximum depth">
-                <Input
+                <NumberInput
                   value={settings.maxDepth}
-                  onChange={(v) => setNum('maxDepth', v)}
-                  type="number"
+                  onChange={(v) => updateSettings({ maxDepth: v })}
+                  min={0}
+                  max={30}
                   suffix="levels"
                 />
               </Field>
               <Field label="Maximum duration">
-                <Input
+                <NumberInput
                   value={settings.maxDuration}
-                  onChange={(v) => setNum('maxDuration', v)}
-                  type="number"
+                  onChange={(v) => updateSettings({ maxDuration: v })}
+                  min={0}
+                  max={3600}
                   suffix="seconds"
                 />
               </Field>
               <Field label="Request timeout">
-                <Input
+                <NumberInput
                   value={settings.requestTimeout}
-                  onChange={(v) => setNum('requestTimeout', v)}
-                  type="number"
+                  onChange={(v) => updateSettings({ requestTimeout: v })}
+                  min={0}
+                  max={3600}
                   suffix="seconds"
                 />
               </Field>
@@ -242,21 +306,21 @@ export function ConfigPage() {
           <Section title="Network" icon={Zap}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <Field label="Delay between requests">
-                <Input
+                <NumberInput
                   value={settings.delayBetweenRequests}
-                  onChange={(v) => {
-                  const raw = parseFloat(v) || 0;
-                  updateSettings({ delayBetweenRequests: Math.min(Math.max(raw, 0), 60) });
-                }}
-                  type="number"
+                  onChange={(v) => updateSettings({ delayBetweenRequests: v })}
+                  min={0}
+                  max={60}
+                  float
                   suffix="seconds"
                 />
               </Field>
               <Field label="Max concurrent requests">
-                <Input
+                <NumberInput
                   value={settings.maxConcurrent}
-                  onChange={(v) => setNum('maxConcurrent', v)}
-                  type="number"
+                  onChange={(v) => updateSettings({ maxConcurrent: v })}
+                  min={0}
+                  max={50}
                   suffix="requests"
                 />
               </Field>

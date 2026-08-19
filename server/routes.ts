@@ -4,6 +4,10 @@ import type { CrawlSettings } from '../src/types/index.js';
 
 const activeCrawlers = new Map<string, CrawlerEngine>();
 
+export function getCrawler(id: string): CrawlerEngine | undefined {
+  return activeCrawlers.get(id);
+}
+
 export function setupRoutes(app: Express) {
   app.post('/api/crawl/start', (req, res) => {
     const settings: CrawlSettings = req.body;

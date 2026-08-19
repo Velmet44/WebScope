@@ -1,4 +1,5 @@
 import type { WebSocketServer, WebSocket } from 'ws';
+import { getCrawler } from './routes.js';
 
 const clients = new Map<string, Set<WebSocket>>();
 const crawlerClients = new Map<WebSocket, string>();
@@ -19,6 +20,13 @@ export function setupWebSocket(wss: WebSocketServer) {
             clients.set(crawlerId, new Set());
           }
           clients.get(crawlerId)!.add(ws);
+
+          const crawler = getCrawler(crawlerId);
+          if (crawler) {
+            ws.send(JSON.stringify({ type: 'state', state: crawler.getSnapshot() }));
+          } else {
+            ws.send(JSON.stringify({ type: 'crawlerNotFound', crawlerId }));
+          }
         }
       } catch {
         // ignore

@@ -12,6 +12,7 @@ export class CrawlerEngine {
   private queue: { url: string; parentId?: string; depth: number }[] = [];
   private visited: Set<string> = new Set();
   private robotsData: RobotsData | null = null;
+  private robotsStatus: { status: 'found' | 'not_found' | 'error'; message: string } | null = null;
   private running = false;
   private paused = false;
   private aborted = false;
@@ -37,6 +38,13 @@ export class CrawlerEngine {
       stats: this.getStats(),
       running: this.running,
       paused: this.paused,
+    };
+  }
+
+  getSnapshot() {
+    return {
+      ...this.getState(),
+      robotsStatus: this.robotsStatus,
     };
   }
 
@@ -167,6 +175,7 @@ export class CrawlerEngine {
     this.addLog('info', 'Checking robots.txt...');
     const robotsResult = await fetchRobotsTxt(this.settings.startUrl, this.settings.userAgent);
     this.robotsData = robotsResult.data;
+    this.robotsStatus = { status: robotsResult.status, message: robotsResult.message };
 
     this.emit('robotsStatus', { status: robotsResult.status, message: robotsResult.message });
     this.addLog('info', `robots.txt: ${robotsResult.message}`);

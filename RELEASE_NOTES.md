@@ -1,8 +1,13 @@
-# WebScope v1.0.1
+# WebScope v1.0.2
 
 **Visual web crawler. Discover, map, and inspect website structures.**
 
 WebScope turns any website URL into an interactive, explorable map — with live progress, per-page inspection, notes, and full export/import.
+
+## What's new in v1.0.2
+
+- **Fixed blank website map on hosted deployments (Render, etc.):** crawl state is now replayed over WebSocket when a client connects or reconnects. Previously, pages discovered before the browser's socket subscribed (common on Render due to proxy/TLS latency) were permanently missed, leaving the map blank while logs and stats kept updating
+- **Fixed Configure page numeric inputs:** fields no longer snap back to the minimum value when cleared. You can now delete the value fully and retype; values clamp to their allowed range on blur
 
 ## What's new in v1.0.1
 
