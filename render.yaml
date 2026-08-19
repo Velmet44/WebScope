@@ -2,6 +2,7 @@ services:
   - type: web
     name: webscope
     runtime: node
+    plan: free
     buildCommand: npm install && npm run build
     startCommand: npm start
     healthCheckPath: /
