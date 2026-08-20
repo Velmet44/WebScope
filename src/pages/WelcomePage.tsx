@@ -143,7 +143,7 @@ export function WelcomePage() {
           Open Source · MIT
         </a>
         <span className="w-px h-3 bg-[var(--color-border-default)]" />
-        <span>v1.0.2</span>
+        <span>v1.0.4</span>
       </footer>
 
       {showImport && (

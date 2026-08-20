@@ -1,8 +1,15 @@
-# WebScope v1.0.3
+# WebScope v1.0.4
 
 **Visual web crawler. Discover, map, and inspect website structures.**
 
 WebScope turns any website URL into an interactive, explorable map — with live progress, per-page inspection, notes, and full export/import.
+
+## What's new in v1.0.4
+
+- **New force-directed graph view:** a second map visualization (Tree / Graph tabs) that renders discovered pages as a live radial graph with status-colored nodes, hover labels, click-to-inspect, zoom controls, and a spring "explosion" animation when opened. Pages added mid-crawl pop in with a pulse instead of re-laying out the whole graph
+- **Fixed connecting lines in the graph:** links between crawled pages are now resolved and drawn (previously the crawler never recorded link targets, so the graph showed nodes only)
+- **Fixed start screen layout:** margins/padding utilities were silently disabled by an unlayered CSS reset (Tailwind v4 layer conflict); the reset now lives in `@layer base`, restoring proper spacing and centering across the whole app
+- **Graph performance & stability:** simulation is damped after the opening animation so additions settle quickly; cyclic crawl graphs no longer crash the force layout (`onDagError` handling)
 
 ## What's new in v1.0.3
 
