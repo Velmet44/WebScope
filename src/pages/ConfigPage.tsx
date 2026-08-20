@@ -225,7 +225,8 @@ export function ConfigPage() {
       </header>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-2xl mx-auto px-8 py-10 space-y-6 animate-slide-up">
+        <div className="min-h-full flex items-center justify-center">
+          <div className="w-full max-w-2xl px-8 py-10 space-y-6 animate-slide-up">
           <Section title="Target" icon={Globe}>
             <Field label="Starting URL" hint="Enter the URL where the crawl begins">
               <Input
@@ -374,6 +375,7 @@ export function ConfigPage() {
               </div>
             </div>
           )}
+        </div>
         </div>
       </div>
 

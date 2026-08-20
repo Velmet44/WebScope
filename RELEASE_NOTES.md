@@ -1,8 +1,13 @@
-# WebScope v1.0.2
+# WebScope v1.0.3
 
 **Visual web crawler. Discover, map, and inspect website structures.**
 
 WebScope turns any website URL into an interactive, explorable map — with live progress, per-page inspection, notes, and full export/import.
+
+## What's new in v1.0.3
+
+- **Redesigned welcome page:** animated aurora + grid background, spacious professional layout, and an "Open Source · MIT" footer link to the GitHub repository
+- **Configure page centering:** the setup form is now centered vertically and horizontally instead of hugging the top-left corner
 
 ## What's new in v1.0.2
 

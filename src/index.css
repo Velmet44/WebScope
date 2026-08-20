@@ -140,3 +140,53 @@ input, textarea, select {
 .animate-pulse-soft {
   animation: pulse 2s ease-in-out infinite;
 }
+
+@keyframes auroraDrift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(70px, -50px) scale(1.2); }
+  66% { transform: translate(-50px, 60px) scale(0.9); }
+}
+
+@keyframes auroraDriftAlt {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-80px, -60px) scale(1.25); }
+}
+
+@keyframes gridPulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.85; }
+}
+
+@keyframes nodeFloat {
+  0%, 100% { transform: translateY(0); opacity: 0.4; }
+  50% { transform: translateY(-16px); opacity: 1; }
+}
+
+.animate-aurora-1 {
+  animation: auroraDrift 18s ease-in-out infinite;
+}
+
+.animate-aurora-2 {
+  animation: auroraDriftAlt 22s ease-in-out infinite;
+}
+
+.animate-aurora-3 {
+  animation: auroraDrift 26s ease-in-out infinite reverse;
+}
+
+.animate-grid {
+  animation: gridPulse 7s ease-in-out infinite;
+}
+
+.animate-node-float {
+  animation: nodeFloat 6s ease-in-out infinite;
+}
+
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(99, 102, 241, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(99, 102, 241, 0.08) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 45%, black 20%, transparent 75%);
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 45%, black 20%, transparent 75%);
+}
